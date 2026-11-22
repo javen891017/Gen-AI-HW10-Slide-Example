@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>快速打造教育場域的 AI 工具 — HCI 知識庫實戰簡報</title>
+  <style>
+    :root {
+      --bg: #f7f8fc;
+      --slide-bg: #f7f8fc;
+      --surface: #ffffff;
+      --surface-subtle: #ffffff;
+      --border: #e2e8f0;
+      --border-strong: #cbd5e1;
+      --text: #0f172a;
+      --text-body: #334155;
+      --text-muted: #64748b;
+      --c-blue: #01b0ff;
+      --c-purple: #9a6fff;
+      --c-teal: #4bc0c0;
+      --c-coral: #ff6484;
+      --c-orange: #ff9f3f;
+      --c-yellow: #ffcd56;
+      --accent: #01b0ff;
+      --accent-2: #9a6fff;
+      --font-sans: "PingFang TC", "Noto Sans TC", "Microsoft JhengHei", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    /* Chapter-based theme rotation */
+    .slide[data-theme="cover"]     { --accent: #01b0ff; --accent-2: #9a6fff; --tag-bg: rgba(1, 176, 255, 0.10); --tag-text: #0369a1; --step-text: #ffffff; }
+    .slide[data-theme="blue"]      { --accent: #01b0ff; --accent-2: #4bc0c0; --tag-bg: rgba(1, 176, 255, 0.10); --tag-text: #0369a1; --step-text: #ffffff; }
+    .slide[data-theme="purple"]    { --accent: #9a6fff; --accent-2: #01b0ff; --tag-bg: rgba(154, 111, 255, 0.11); --tag-text: #5b21b6; --step-text: #ffffff; }
+    .slide[data-theme="teal"]      { --accent: #4bc0c0; --accent-2: #01b0ff; --tag-bg: rgba(75, 192, 192, 0.14); --tag-text: #0f766e; --step-text: #0f172a; }
+    .slide[data-theme="coral"]     { --accent: #ff6484; --accent-2: #ff9f3f; --tag-bg: rgba(255, 100, 132, 0.11); --tag-text: #be123c; --step-text: #ffffff; }
+    .slide[data-theme="orange"]    { --accent: #ff9f3f; --accent-2: #ffcd56; --tag-bg: rgba(255, 159, 63, 0.14); --tag-text: #b45309; --step-text: #0f172a; }
+    .slide[data-theme="yellow"]    { --accent: #ffcd56; --accent-2: #ff9f3f; --tag-bg: rgba(255, 205, 86, 0.22); --tag-text: #92400e; --step-text: #0f172a; }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg);
+      color: var(--text);
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+    }
+
+    /* Stage container */
+    .deck-wrapper {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 22px 28px 68px;
+      background: var(--bg);
+    }
+
+    .slide {
+      display: none;
+      width: 100%;
+      max-width: 1200px;
+      height: 100%;
+      max-height: 700px;
+      background: var(--slide-bg);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 42px 52px;
+      box-shadow: 0 12px 36px rgba(15, 23, 42, 0.06), 0 2px 6px rgba(15, 23, 42, 0.03);
+      flex-direction: column;
+      justify-content: space-between;
+      position: relative;
+      overflow-y: auto;
+      animation: fadeSlide 0.26s ease-out;
+    }
+
+    .slide.active {
+      display: flex;
+    }
+
+    @keyframes fadeSlide {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Header & Footer inside slide */
+    .slide-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 12px;
+    }
+
+    .tag {
+      display: inline-block;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--tag-text);
+      background: var(--tag-bg);
+      border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+      padding: 4px 13px;
+      border-radius: 999px;
+    }
+
+    .slide-num {
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 600;
+      font-variant-numeric: tabular-nums;
+    }
+
+    h1 {
+      font-size: 44px;
+      line-height: 1.25;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      background: linear-gradient(95deg, #0f172a 0%, var(--accent) 55%, var(--accent-2) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 18px;
+    }
+
+    h2 {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+      background: linear-gradient(95deg, #0f172a 55%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 16px;
+      line-height: 1.32;
+    }
+
+    h3 {
+      font-size: 17px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 8px;
+    }
+
+    p {
+      font-size: 15.5px;
+      line-height: 1.65;
+      color: var(--text-body);
+    }
+
+    .subtitle {
+      font-size: 19px;
+      color: var(--text-body);
+      line-height: 1.65;
+      max-width: 820px;
+      margin-bottom: 28px;
+    }
+
+    .slide-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .slide-footer {
+      margin-top: 18px;
+      padding-top: 10px;
+      border-top: 1px solid var(--border);
+      font-size: 12.5px;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Grids & Cards */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card.highlight {
+      background: var(--surface);
+      border-color: var(--border);
+      padding-left: 25px;
+    }
+
+    .card.highlight::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 5px;
+      background: linear-gradient(180deg, var(--accent) 0%, var(--accent-2) 100%);
+    }
+
+    .card.accent-top::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--accent) 0%, var(--accent-2) 100%);
+    }
+
+    ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 9px;
+    }
+
+    li {
+      font-size: 15px;
+      line-height: 1.55;
+      color: var(--text-body);
+      padding-left: 18px;
+      position: relative;
+    }
+
+    li::before {
+      content: "▸";
+      position: absolute;
+      left: 0;
+      color: var(--accent);
+      font-weight: 800;
+    }
+
+    strong {
+      color: #0f172a;
+      font-weight: 700;
+    }
+
+    .callout {
+      background: var(--surface-subtle);
+      border: 1px solid var(--border);
+      border-left: 5px solid transparent;
+      border-image: linear-gradient(180deg, var(--accent), var(--accent-2)) 1;
+      padding: 13px 18px;
+      border-radius: 0 12px 12px 0;
+      margin-top: 16px;
+      font-size: 14.5px;
+      color: var(--text-body);
+      line-height: 1.6;
+    }
+
+    /* Pipeline step boxes */
+    .pipeline {
+      display: flex;
+      align-items: stretch;
+      gap: 14px;
+      margin: 10px 0;
+    }
+
+    .step {
+      flex: 1;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px 16px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03);
+    }
+
+    .step::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+    }
+
+    .step-num {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: var(--step-text);
+      font-weight: 800;
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+
+    .step h3 {
+      font-size: 16px;
+      margin-bottom: 6px;
+    }
+
+    .step p {
+      font-size: 13.5px;
+      line-height: 1.55;
+    }
+
+    /* Table */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14.5px;
+      background: var(--surface);
+      border-radius: 12px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      box-shadow: 0 2px 10px rgba(15, 23, 42, 0.03);
+    }
+
+    th, td {
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+      line-height: 1.5;
+      color: var(--text-body);
+    }
+
+    th {
+      background: #ffffff;
+      color: #0f172a;
+      font-weight: 700;
+      font-size: 13.5px;
+      border-bottom: 2px solid var(--accent);
+    }
+
+    tr:last-child td {
+      border-bottom: none;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 9px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      background: var(--tag-bg);
+      color: var(--tag-text);
+    }
+
+    .badge.teal   { background: rgba(75, 192, 192, 0.16); color: #0f766e; }
+    .badge.orange { background: rgba(255, 159, 63, 0.18); color: #b45309; }
+    .badge.coral  { background: rgba(255, 100, 132, 0.14); color: #be123c; }
+    .badge.yellow { background: rgba(255, 205, 86, 0.28); color: #92400e; }
+
+    /* Bottom Navigation Bar */
+    .nav-bar {
+      position: fixed;
+      bottom: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(10px);
+      border: 1px solid var(--border);
+      padding: 8px 18px;
+      border-radius: 999px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+      z-index: 50;
+    }
+
+    .nav-btn {
+      background: #ffffff;
+      border: 1px solid var(--border-strong);
+      color: var(--text);
+      padding: 5px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: var(--font-sans);
+      transition: all 0.15s ease;
+    }
+
+    .nav-btn:hover:not(:disabled) {
+      background: linear-gradient(90deg, #01b0ff, #9a6fff);
+      color: #ffffff;
+      border-color: transparent;
+    }
+
+    .nav-btn:disabled {
+      opacity: 0.35;
+      cursor: not-allowed;
+    }
+
+    .progress-track {
+      width: 160px;
+      height: 6px;
+      background: #e2e8f0;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #01b0ff, #9a6fff);
+      transition: width 0.25s ease, background 0.25s ease;
+    }
+
+    /* Overview Grid Mode */
+    body.overview-mode .deck-wrapper {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      overflow-y: auto;
+      align-items: start;
+      padding: 24px 32px 80px;
+    }
+
+    body.overview-mode .slide {
+      display: flex;
+      height: 220px;
+      max-height: 220px;
+      padding: 18px;
+      cursor: pointer;
+      overflow: hidden;
+      transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    body.overview-mode .slide:hover {
+      transform: translateY(-3px);
+      border-color: var(--accent);
+      box-shadow: 0 10px 24px rgba(15, 23, 42, 0.10);
+    }
+
+    body.overview-mode .slide h1 { font-size: 20px; }
+    body.overview-mode .slide h2 { font-size: 16px; }
+    body.overview-mode .slide p,
+    body.overview-mode .slide li,
+    body.overview-mode .slide td,
+    body.overview-mode .slide th,
+    body.overview-mode .slide .callout { font-size: 11px; }
+
+    @media print {
+      body { overflow: visible; background: #fff; height: auto; }
+      .deck-wrapper { display: block; padding: 0; height: auto; background: #fff; }
+      .slide { display: flex !important; page-break-after: always; max-height: none; height: 95vh; border-radius: 0; box-shadow: none; }
+      .nav-bar { display: none; }
+    }
+  </style>
+</head>
+<body>
+  <div class="deck-wrapper" id="deck">
+
+    <!-- Slide 1: Cover -->
+    <section class="slide active" data-theme="cover">
+      <div class="slide-header">
+        <span class="tag">HCI × Generative AI 實戰指南</span>
+        <span class="slide-num">01 / 09</span>
+      </div>
+      <div class="slide-body">
+        <h1>快速打造教育場域的 AI 工具</h1>
+        <p class="subtitle">
+          從人機互動（HCI）實證研究出發：如何快速組裝多代理系統、設計適應不同學生的對話與介面、避開倫理與隱私陷阱，並用輕量方法驗證教學成效。
+        </p>
+        <div class="grid-3">
+          <div class="card accent-top">
+            <h3>1. 破除迷思</h3>
+            <p>為何「做了 AI 工具」不等於「學生願意用且學得好」？</p>
+          </div>
+          <div class="card accent-top">
+            <h3>2. 快速建構</h3>
+            <p>Multi-Agent 管線、任務語氣切換與兩階段隱私推力實作。</p>
+          </div>
+          <div class="card accent-top">
+            <h3>3. 輕量驗證</h3>
+            <p>低成本原型測試與兼顧「易用性 × 同理心 × 學習改變」的評估箱。</p>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>資料來源：HCI LLM Wiki（Mourelatos &amp; Liontou 2026、Lee et al. 2027、Klütsch et al. 2026、Wang et al. 2026、Kober et al. 2026）</span>
+        <span>按 → 或空白鍵切換投影片</span>
+      </div>
+    </section>
+
+    <!-- Slide 2: Why Education AI Tools Fail -->
+    <section class="slide" data-theme="blue">
+      <div class="slide-header">
+        <span class="tag">01 問題意識與理論地基</span>
+        <span class="slide-num">02 / 09</span>
+      </div>
+      <div class="slide-body">
+        <h2>開發前先想清楚：給了 AI 工具，學生就會用嗎？</h2>
+        <div class="grid-2">
+          <div class="card highlight">
+            <h3>能力取向 × 自我決定理論（SDT）</h3>
+            <ul>
+              <li><strong>可用 ≠ 能力擴展</strong>：提供 AI 接入（Access）只是起點，重點是能否真正轉化為學生的實質學習自由（能力取向 Capability Approach；Sen）。</li>
+              <li><strong>三大內在動機需求（SDT）</strong>：
+                <br>① <strong>自主性（Autonomy）</strong>：能依自己的步調探索。
+                <br>② <strong>勝任感（Competence）</strong>：獲得清晰回饋而非挫敗。
+                <br>③ <strong>關聯感（Relatedness）</strong>：感到被理解與社群連結。
+              </li>
+            </ul>
+          </div>
+          <div class="card highlight">
+            <h3>隱形門檻：別假設所有學生都一樣</h3>
+            <ul>
+              <li><strong>心理資源落差</strong>：低自尊、低心理韌性（Resilience）、高神經質的學生更容易產生科技壓力，不敢在 AI 面前試錯（Mourelatos &amp; Liontou, 2026; N = 748）。</li>
+              <li><strong>決策風格差異</strong>：18–29 歲年輕族群與「直覺型決策者」容易略過繁瑣說明，直接憑直覺操作（Klütsch et al., 2026; N = 209）。</li>
+              <li><strong>世代與任務偏好</strong>：20–30 歲在創意任務信任度較高、40–50 歲在創意任務不適感較高（Lee et al., 2027; N = 129）。</li>
+            </ul>
+          </div>
+        </div>
+        <div class="callout">
+          <strong>教育 AI 設計第一原則：</strong>放棄「一體適用（One-Size-Fits-All）」的單一介面，為低自信或直覺型學習者提供低風險的「安全練習沙盒」與清楚鷹架。
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>對應 Wiki：capability-approach.md / self-determination-theory.md / psychological-factors-in-ai-adoption.md</span>
+        <span>02 / 09</span>
+      </div>
+    </section>
+
+    <!-- Slide 3: Rapid Multi-Agent Architecture -->
+    <section class="slide" data-theme="purple">
+      <div class="slide-header">
+        <span class="tag">02 快速建構架構</span>
+        <span class="slide-num">03 / 09</span>
+      </div>
+      <div class="slide-body">
+        <h2>不用從頭訓練模型：Multi-Agent 快速組裝管線</h2>
+        <p style="margin-bottom: 14px;">借鏡 <strong>EmotiStage</strong>（Wang et al., 2026, ICMI '26）的多代理架構，用結構化 JSON 串接現成 API 即可快速落地：</p>
+        <div class="pipeline">
+          <div class="step">
+            <div class="step-num">1</div>
+            <h3>引導探索代理</h3>
+            <p>用 GPT-4o 進行 3–4 輪引導對話，嚴格限制<strong>每輪只問一題（One-question-per-turn）</strong>，避免學生對話疲乏。</p>
+          </div>
+          <div class="step">
+            <div class="step-num">2</div>
+            <h3>結構化分析代理</h3>
+            <p>將對話濃縮為共用的 <strong>JSON 中繼表徵</strong>（故事摘要＋雙層標籤：持續性主軸情緒 vs. 衝突次要情緒），供下游共用。</p>
+          </div>
+          <div class="step">
+            <div class="step-num">3</div>
+            <h3>多模態並行生成</h3>
+            <p>文字腳本、背景圖像（DALL-E 3）、聲學參數／音訊（LeVo）與預設動畫<strong>並行產生</strong>，縮短等待時間。</p>
+          </div>
+          <div class="step">
+            <div class="step-num">4</div>
+            <h3>輕量前端合成</h3>
+            <p>使用 Vue.js + Web Audio API / CSS 圖層合成，不需複雜 3D 引擎即可呈現反思舞台。</p>
+          </div>
+        </div>
+        <div class="callout">
+          <strong>教育場域改裝範例：</strong>將「情緒劇場」替換為「歷史情境辯論台」或「實驗錯誤重演室」——學生先對話釐清觀點，再調整參數，最後退居觀眾席觀察兩個 AI 角色對質。
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>對應 Wiki：systems/emotistage.md / sources/wang-2026-emotistage.md</span>
+        <span>03 / 09</span>
+      </div>
+    </section>
+
+    <!-- Slide 4: Form-Grounded Multimodal & Control Delegation -->
+    <section class="slide" data-theme="purple">
+      <div class="slide-header">
+        <span class="tag">02 多模態與控制權設計</span>
+        <span class="slide-num">04 / 09</span>
+      </div>
+      <div class="slide-body">
+        <h2>多模態整合與「把什麼控制權留給學生」</h2>
+        <div class="grid-2">
+          <div class="card">
+            <h3>基於形式的多模態整合（Form-Grounded）</h3>
+            <p>先找一個學生原本就懂的<strong>複合文化形式</strong>（如劇場、實驗室筆記），自然決定各模態分工（Wang et al., 2026）：</p>
+            <ul>
+              <li><strong>背景圖像</strong> → 建立學習情境與脈絡氛圍。</li>
+              <li><strong>聲音與歌詞</strong> → 傳遞情感基調與節奏記憶。</li>
+              <li><strong>虛擬角色對話</strong> → 把抽象衝突具象化為可觀察的辯論。</li>
+            </ul>
+          </div>
+          <div class="card highlight">
+            <h3>控制權委派邊界（Artistic Delegation）</h3>
+            <ul>
+              <li><strong>保留給學生（意義校準）</strong>：讓學生決定核心問題與調整高階參數（EmotiStage 中 12/13 人主動調整 BPM/音色來自我校準）。</li>
+              <li><strong>委派給 AI（技術渲染）</strong>：自動產出美編、配樂與動畫，避免學生陷入「操作工具的焦慮」而忘記學習思考。</li>
+              <li><strong>適度失控的價值</strong>：讓學生退居「觀眾（Spectator）」，產生<strong>自我抽離（Self-Distancing）</strong>，看見原本忽略的盲點。</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>對應 Wiki：form-grounded-multimodal-integration.md / emotional-awareness-and-self-distancing.md</span>
+        <span>04 / 09</span>
+      </div>
+    </section>
+
+    <!-- Slide 5: Adaptive Dialogue & Error Recovery -->
+    <section class="slide" data-theme="teal">
+      <div class="slide-header">
+        <span class="tag">03 對話策略與錯誤復原</span>
+        <span class="slide-num">05 / 09</span>
+      </div>
+      <div class="slide-body">
+        <h2>依教學任務切換 AI 語氣，並溫柔接住學生的口誤</h2>
+        <p style="margin-bottom: 12px;">依據 <strong>溝通調適理論（CAT）</strong> 與 <strong>McGrath 群體任務環狀模型</strong>（Lee et al., 2027），「學學生說話」並非在所有教學場景都最好：</p>
+        <table>
+          <thead>
+            <tr>
+              <th>教學任務類型（McGrath）</th>
+              <th>建議語言策略（CAT）</th>
+              <th>Prompt 設計實務與實證依據</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="badge teal">發想 Generate</span><br><small>專題腦力激盪、創意寫作</small></td>
+              <td><strong>趨同策略（Convergence）</strong><br>呼應學生用詞與停頓節奏</td>
+              <td>顯著提升<strong>信任感（p = .046）</strong>、溫暖度與勝任感；營造「思考夥伴」的協同效應（Synergy）。</td>
+            </tr>
+            <tr>
+              <td><span class="badge teal">選擇 Choose</span><br><small>挑選參考資料、決定解題路徑</small></td>
+              <td><strong>趨同策略（Convergence）</strong><br>重述學生偏好並溫和比較</td>
+              <td>顯著提升<strong>信任感（p = .016）</strong>，讓學生感覺 AI 真的理解自己的需求與限制。</td>
+            </tr>
+            <tr>
+              <td><span class="badge orange">執行 Execute</span><br><small>實驗步驟引導、程式除錯</small></td>
+              <td><strong>維持策略（Maintenance）</strong><br>精準、中立、簡潔步驟指令</td>
+              <td>結果導向任務中，維持中立語氣同樣可信；過度模仿口氣或猶豫反而可能顯得不夠專業。</td>
+            </tr>
+            <tr>
+              <td><span class="badge orange">協商 Negotiate</span><br><small>討論學習進度、釐清評分標準</small></td>
+              <td><strong>維持策略（Maintenance）</strong><br>客觀列出權衡與替代方案</td>
+              <td>保持中立與條理，避免在利益或規範協商時讓學生產生「刻意討好」的不信任感。</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="callout">
+          <strong>處理學生口誤／打錯字（Slips of the Tongue）：</strong>結合上下文推論真實意圖，在發想／選擇任務用趨同語氣「先複述原詞再順勢澄清」（保全面子），在執行任務直接用正確術語確認。
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>對應 Wiki：communication-accommodation-theory.md / mcgrath-task-circumplex.md / human-error-recovery-in-hri.md</span>
+        <span>05 / 09</span>
+      </div>
+    </section>
+
+    <!-- Slide 6: Avatar, Sycophancy & Identity Transparency -->
+    <section class="slide" data-theme="coral">
+      <div class="slide-header">
+        <span class="tag">03 外觀、語氣與透明倫理</span>
+        <span class="slide-num">06 / 09</span>
+      </div>
+      <div class="slide-body">
+        <h2>虛擬助教的外觀、阿諛奉承與「AI 身分揭露」</h2>
+        <div class="grid-3">
+          <div class="card accent-top">
+            <h3>1. 避開恐怖谷效應</h3>
+            <p>別追求照片級逼真真人！</p>
+            <ul>
+              <li>採用<strong>風格化／卡通感</strong> 3D 或 2D 化身（Kober et al., 2026; Wang et al., 2026）。</li>
+              <li>加入微幅眨眼與呼吸動作即可提升親切感，同時保留「人工感」避免不適（Uncanny Valley）。</li>
+            </ul>
+          </div>
+          <div class="card accent-top">
+            <h3>2. 控制 LLM 阿諛奉承</h3>
+            <p>Sycophancy 會傷及教育公信力：</p>
+            <ul>
+              <li>過度附和學生錯誤答案會破壞學習與信任。</li>
+              <li><strong>但需注意</strong>：Prompt 過度抑制熱情會讓 AI 語氣在 VADER 分析中比真人更冷淡（Kober et al., 2026），需保留適度鼓勵。</li>
+            </ul>
+          </div>
+          <div class="card highlight">
+            <h3>3. 身分透明度的心理代價</h3>
+            <p>盲測與明測的驚人對比（Kober et al., 2026; N = 42）：</p>
+            <ul>
+              <li>不知情時 10/21 人分不出 AI 與真人；<strong>一旦知情，正向情感與社會臨場感顯著下降（p &lt; .01）</strong>。</li>
+              <li><strong>對策</strong>：倫理上必須明確標示 AI 身分，並靠「結構化同理引導」彌補心理距離。</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>對應 Wiki：anthropomorphism-and-uncanny-valley.md / llm-sycophancy-and-identity-transparency.md</span>
+        <span>06 / 09</span>
+      </div>
+    </section>
+
+    <!-- Slide 7: Privacy & Ethical Nudging -->
+    <section class="slide" data-theme="orange">
+      <div class="slide-header">
+        <span class="tag">04 教育資料與隱私設計</span>
+        <span class="slide-num">07 / 09</span>
+      </div>
+      <div class="slide-body">
+        <h2>讓學生真正看懂 AI 隱私風險：兩階段知情推力</h2>
+        <p style="margin-bottom: 14px;">學生常因通知疲乏或想趕快用工具而忽略個資授權（隱私悖論 Privacy Paradox）。參考 Klütsch et al.（2026）設計<strong>透明第二型推力（Transparent Type-2 Nudge）</strong>：</p>
+        <div class="grid-2">
+          <div class="card highlight">
+            <h3>Stage 1：把選項推到第一層</h3>
+            <ul>
+              <li>絕不使用誘導點「全部同意」的<strong>暗黑模式（Dark Patterns）</strong>。</li>
+              <li>把「了解我的學習資料如何被使用」按鈕放在與「開始使用」<strong>同等顯眼的第一層位置</strong>。</li>
+              <li><strong>實證效果</strong>：僅憑曝光與位置效應即可讓 <strong>48.81%–64.13%</strong> 使用者主動點開檢視。</li>
+            </ul>
+          </div>
+          <div class="card highlight">
+            <h3>Stage 2：混合式隱私量表（Hybrid Nudge）</h3>
+            <ul>
+              <li>結合<strong>視覺化風險燈號（紅／綠量表）＋白話條列說明</strong>（是否加密、是否用於模型訓練或分享第三方）。</li>
+              <li><strong>登門檻效應（Foot-in-the-door）</strong>：第一階段點開過資訊的學生，第二階段低隱私方案採用率驟降至 <strong>1.64%–5.36%</strong>。</li>
+              <li><strong>進階延伸</strong>：針對直覺型年輕學生，可整合<strong>個人化隱私助理（PPA）</strong>動態提醒。</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>對應 Wiki：digital-nudging-and-dark-patterns.md / privacy-paradox-and-cognitive-biases.md / personalized-privacy-assistant.md</span>
+        <span>07 / 09</span>
+      </div>
+    </section>
+
+    <!-- Slide 8: Rapid Validation & Evaluation Toolbox -->
+    <section class="slide" data-theme="yellow">
+      <div class="slide-header">
+        <span class="tag">05 快速驗證與評估方法</span>
+        <span class="slide-num">08 / 09</span>
+      </div>
+      <div class="slide-body">
+        <h2>如何「快速且嚴謹」地驗證你的教育 AI 工具？</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>驗證階段</th>
+              <th>快速工具與方法</th>
+              <th>能幫你回答什麼問題？</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="badge yellow">1. 寫程式前（原型期）</span></td>
+              <td><strong>點擊原型（Click-Dummy）</strong>／<strong>情境影片模擬</strong> ＋ <strong>GPT-4o 預實驗檢驗</strong></td>
+              <td>先用靜態原型或影片測試介面流程與 Prompt 語氣差異，確認操弄有效再投入工程開發（Klütsch et al., 2026; Lee et al., 2027）。</td>
+            </tr>
+            <tr>
+              <td><span class="badge yellow">2. 體驗與同理心（使用後）</span></td>
+              <td><strong>SUS 易用性量表</strong> ＋ <strong>PETS 科技同理心量表</strong> ／ <strong>RoSAS</strong></td>
+              <td>檢驗工具是否「既好操作（如 EmotiStage SUS 81.35）」又「讓學生覺得被理解與溫暖（PETS 78.37 / RoSAS）」（Wang et al., 2026; Lee et al., 2027）。</td>
+            </tr>
+            <tr>
+              <td><span class="badge yellow">3. 學習與覺察改變（前後測）</span></td>
+              <td><strong>S-DERS（當下覺察／清晰度）</strong> ＋ <strong>自由列舉（Free-Listing）</strong> ＋ <strong>PANAS</strong></td>
+              <td>捕捉單堂課 30–50 分鐘前後，學生的情緒或概念顆粒度是否真的變細膩（Wang et al., 2026; Kober et al., 2026）。</td>
+            </tr>
+            <tr>
+              <td><span class="badge yellow">4. 客觀行為與統計修正</span></td>
+              <td><strong>VADER 情感分析</strong> ＋ <strong>Heckman / 貝氏邏輯迴歸</strong></td>
+              <td>客觀檢查 AI 對話語氣是否過冷，並修正「只有積極學生才試用工具」的樣本選擇偏誤（Mourelatos &amp; Liontou, 2026; Klütsch et al., 2026）。</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="slide-footer">
+        <span>對應 Wiki：methods/ 資料夾全系列評估與統計頁面</span>
+        <span>08 / 09</span>
+      </div>
+    </section>
+
+    <!-- Slide 9: Action Checklist -->
+    <section class="slide" data-theme="teal">
+      <div class="slide-header">
+        <span class="tag">06 行動檢核表</span>
+        <span class="slide-num">09 / 09</span>
+      </div>
+      <div class="slide-body">
+        <h2>打造教育 AI 工具的 5 步快速檢核清單</h2>
+        <div class="grid-2">
+          <div class="card highlight">
+            <h3>設計與架構檢核</h3>
+            <ul>
+              <li><strong>① 拆解任務與對象</strong>：工具是給發想還是步驟執行？是否照顧到低自信／直覺型學生？</li>
+              <li><strong>② Multi-Agent 模組化</strong>：對話引導限制「每輪一問」，用 JSON 串接生成模組。</li>
+              <li><strong>③ 切分控制權邊界</strong>：讓學生調高階意義參數，繁瑣生成交給 AI。</li>
+              <li><strong>④ 語氣與外觀校準</strong>：依任務切換 Convergence / Maintenance；用風格化外觀避開恐怖谷。</li>
+              <li><strong>⑤ 透明揭露與隱私推力</strong>：明確標示 AI 身分，並採用「第一層按鈕＋視覺化說明」兩階段知情設計。</li>
+            </ul>
+          </div>
+          <div class="card accent-top">
+            <h3>本週即可執行的下一步</h3>
+            <ul>
+              <li>用 <strong>Click-Dummy 或 2 支短情境對話腳本</strong>，找 5 位同學做小規模前測。</li>
+              <li>用 <strong>GPT-4o 當預實驗檢查員</strong>，驗證你的「發想語氣」與「執行語氣」Prompt 是否有明顯區隔。</li>
+              <li>準備一份 <strong>10 題 SUS ＋ 簡短前後測 Free-Listing</strong>，在課堂 20 分鐘試用後立刻收集回饋。</li>
+            </ul>
+            <div class="callout" style="margin-top: 12px;">
+              <strong>核心心法：</strong>快速打造教育 AI 的關鍵不在於模型多大，而在於用 HCI 實證把「人、任務、控制權與透明度」對齊。
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer">
+        <span>對應 Wiki：syntheses/adaptive-human-ai-interaction-synthesis.md</span>
+        <span>09 / 09</span>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Navigation Controls -->
+  <div class="nav-bar">
+    <button class="nav-btn" id="prevBtn" onclick="changeSlide(-1)">← 上一頁</button>
+    <div class="progress-track">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+    <span class="slide-num" id="navCounter">1 / 9</span>
+    <button class="nav-btn" id="nextBtn" onclick="changeSlide(1)">下一頁 →</button>
+    <button class="nav-btn" id="overviewBtn" onclick="toggleOverview()">總覽 (G)</button>
+  </div>
+
+  <script>
+    const slides = Array.from(document.querySelectorAll('.slide'));
+    const themeGradients = {
+      cover:  'linear-gradient(90deg, #01b0ff, #9a6fff)',
+      blue:   'linear-gradient(90deg, #01b0ff, #4bc0c0)',
+      purple: 'linear-gradient(90deg, #9a6fff, #01b0ff)',
+      teal:   'linear-gradient(90deg, #4bc0c0, #01b0ff)',
+      coral:  'linear-gradient(90deg, #ff6484, #ff9f3f)',
+      orange: 'linear-gradient(90deg, #ff9f3f, #ffcd56)',
+      yellow: 'linear-gradient(90deg, #ffcd56, #ff9f3f)'
+    };
+    let current = 0;
+
+    function renderSlide(index) {
+      current = Math.max(0, Math.min(index, slides.length - 1));
+      slides.forEach((s, i) => s.classList.toggle('active', i === current));
+      const theme = slides[current].dataset.theme || 'cover';
+      const fill = document.getElementById('progressFill');
+      fill.style.width = `${((current + 1) / slides.length) * 100}%`;
+      fill.style.background = themeGradients[theme] || themeGradients.cover;
+      document.getElementById('prevBtn').disabled = current === 0;
+      document.getElementById('nextBtn').disabled = current === slides.length - 1;
+      document.getElementById('navCounter').textContent = `${current + 1} / ${slides.length}`;
+    }
+
+    function changeSlide(delta) {
+      if (document.body.classList.contains('overview-mode')) return;
+      renderSlide(current + delta);
+    }
+
+    function toggleOverview() {
+      document.body.classList.toggle('overview-mode');
+      const isOverview = document.body.classList.contains('overview-mode');
+      document.getElementById('overviewBtn').textContent = isOverview ? '返回投影片 (G)' : '總覽 (G)';
+    }
+
+    slides.forEach((slide, idx) => {
+      slide.addEventListener('click', () => {
+        if (document.body.classList.contains('overview-mode')) {
+          document.body.classList.remove('overview-mode');
+          document.getElementById('overviewBtn').textContent = '總覽 (G)';
+          renderSlide(idx);
+        }
+      });
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        e.preventDefault();
+        changeSlide(1);
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        e.preventDefault();
+        changeSlide(-1);
+      } else if (e.key.toLowerCase() === 'g') {
+        toggleOverview();
+      }
+    });
+
+    renderSlide(0);
+  </script>
+</body>
+</html>
